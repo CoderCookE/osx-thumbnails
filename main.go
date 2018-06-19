@@ -23,7 +23,7 @@ type Thumbnail struct {
 func main() {
 	println("starting")
 	//echo $TMPDIR
-	input := fmt.Sprintf("%s../C/com.apple.QuickLook.thumbnailcache", os.Args[1])
+	input := fmt.Sprintf("%s../C/com.apple.QuickLook.thumbnailcache", os.Getenv("TMPDIR"))
 	println(input)
 
 	dbLocation := fmt.Sprintf("%s/index.sqlite?cache=shared&mode=ro", input)

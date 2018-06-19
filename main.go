@@ -63,22 +63,6 @@ func main() {
 		thumbnails = append(thumbnails, thumbnail)
 	}
 
-	//err = rows.Err()
-
-	//	defer rows.Close()
-
-	//	if err != nil {
-	//		log.Fatal(err)
-	//	}
-
-	//	for rows.Next() {
-	//		err = rows.Scan(thumbnailData)
-	//		if err != nil {
-	//			log.Fatal(err)
-	//		}
-	//		fmt.Println(string(thumbnailData.width))
-	//	}
-
 	dataFile := fmt.Sprintf("%s/thumbnails.data", input)
 	f, err := os.Open(dataFile)
 	defer f.Close()

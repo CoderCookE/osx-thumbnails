@@ -1,0 +1,4 @@
+package: keybase/ecook/thumbnails
+import:
+- package: github.com/mattn/go-sqlite3
+  version: ^1.9.0

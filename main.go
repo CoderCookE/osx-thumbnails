@@ -6,6 +6,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"image"
 	"image/png"
+	"io/ioutil"
 	"log"
 	"os"
 )
@@ -20,15 +21,29 @@ type Thumbnail struct {
 	bitmapdata_length   int
 }
 
+const TMPLOCATION = "./tmp/dat1"
+
 func main() {
 	println("starting")
 	//echo $TMPDIR
 	input := fmt.Sprintf("%s../C/com.apple.QuickLook.thumbnailcache", os.Getenv("TMPDIR"))
 	println(input)
 
-	dbLocation := fmt.Sprintf("%s/index.sqlite?cache=shared&mode=ro", input)
+	dbLocation := fmt.Sprintf("%s/index.sqlite", input)
+
 	println(dbLocation)
-	db, err := sql.Open("sqlite3", dbLocation)
+
+	data, err := ioutil.ReadFile(dbLocation)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = ioutil.WriteFile(TMPLOCATION, data, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	db, err := sql.Open("sqlite3", TMPLOCATION)
 	defer db.Close()
 
 	db.SetMaxOpenConns(1)

@@ -6,10 +6,11 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"image"
 	"image/png"
+	"log"
 	"os"
 )
 
-type Thumnails struct {
+type Thumbnail struct {
 	width               int
 	height              int
 	bitspercomponent    int
@@ -25,67 +26,82 @@ func main() {
 	input := fmt.Sprintf("%s../C/com.apple.QuickLook.thumbnailcache", os.Args[1])
 	println(input)
 
-	dbLocation := fmt.Sprintf("%s/index.sqlite", input)
+	dbLocation := fmt.Sprintf("%s/index.sqlite?cache=shared&mode=ro", input)
 	println(dbLocation)
 	db, err := sql.Open("sqlite3", dbLocation)
+	defer db.Close()
+
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
+
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
-	rows, err := db.Query("select * from thumnails limit 1;")
-	if err != nil {
-		panic(err)
-	}
-
-	thumbnailData := &Thumnails{}
-	for rows.Next() {
-		err = rows.Scan(thumbnailData)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println(string(thumbnailData.width))
-	}
+	rows, err := db.Query("SELECT width, height, bitspercomponent, bitsperpixel, bytesperrow, bitmapdata_location, bitmapdata_length FROM thumbnails")
 	defer rows.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var width int
+	var height int
+	var bitspercomponent int
+	var bitsperpixel int
+	var bytesperrow int
+	var bitmapdata_location int
+	var bitmapdata_length int
+
+	thumbnails := make([]*Thumbnail, 0)
+	for rows.Next() {
+		err = rows.Scan(&width, &height, &bitspercomponent, &bitsperpixel, &bytesperrow, &bitmapdata_location, &bitmapdata_length)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		thumbnail := &Thumbnail{width, height, bitspercomponent, bitsperpixel, bytesperrow, bitmapdata_location, bitmapdata_length}
+		thumbnails = append(thumbnails, thumbnail)
+	}
+
+	//err = rows.Err()
+
+	//	defer rows.Close()
+
+	//	if err != nil {
+	//		log.Fatal(err)
+	//	}
+
+	//	for rows.Next() {
+	//		err = rows.Scan(thumbnailData)
+	//		if err != nil {
+	//			log.Fatal(err)
+	//		}
+	//		fmt.Println(string(thumbnailData.width))
+	//	}
 
 	dataFile := fmt.Sprintf("%s/thumbnails.data", input)
-
-	println(dataFile)
 	f, err := os.Open(dataFile)
-	if err != nil {
-		panic(err)
-	}
 	defer f.Close()
-
-	dataLocation := int64(6583848)
-	//ret, err := f.Seek(dataLocation, 0)
-	//if err != nil {
-	//	panic(err)
-	//}
-	//println(ret)
-
-	const dataLength = 4096
-	buf := make([]byte, dataLength)
-	fileContents, err := f.ReadAt(buf, dataLocation)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
-	println(fileContents)
+	for i, thumb := range thumbnails {
+		dataLocation := int64(thumb.bitmapdata_location)
+		dataLength := int64(thumb.bitmapdata_length)
 
-	println(len(buf))
+		buf := make([]byte, dataLength)
+		_, err = f.ReadAt(buf, dataLocation)
+		if err != nil {
+			log.Fatal(err)
+		}
 
-	println(string(buf[:dataLength]))
+		img := &image.RGBA{Pix: buf, Stride: thumb.bytesperrow, Rect: image.Rect(0, 0, thumb.width, thumb.height)}
 
-	bytesperrow := 128
-	bitsperpixel := 32
-	bitspercomponent := 8
+		filename := fmt.Sprintf("out-%d.png", i)
+		out, _ := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, 0600)
+		defer out.Close()
 
-	width := bytesperrow / (bitsperpixel / bitspercomponent)
-	height := 32
-
-	img := &image.RGBA{Pix: buf, Stride: bytesperrow, Rect: image.Rect(0, 0, width, height)}
-
-	out, _ := os.OpenFile("out.png", os.O_WRONLY|os.O_CREATE, 0600)
-	defer out.Close()
-	png.Encode(out, img)
+		png.Encode(out, img)
+	}
 }

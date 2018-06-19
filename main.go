@@ -97,7 +97,7 @@ func main() {
 
 		img := &image.RGBA{Pix: buf, Stride: thumb.bytesperrow, Rect: image.Rect(0, 0, thumb.width, thumb.height)}
 
-		filename := fmt.Sprintf("out-%d.png", i)
+		filename := fmt.Sprintf("./output/out-%d.png", i)
 		out, _ := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, 0600)
 		defer out.Close()
 

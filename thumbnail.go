@@ -18,7 +18,14 @@ type Thumbnail struct {
 	data                []byte
 }
 
-func (thumb *Thumbnail) FetchData(f *os.File) {
+func NewThumbnail(width, height, bitspercomponent, bitsperpixel, bytesperrow int, bitmapdata_location, bitmapdata_length int64, f *os.File) *Thumbnail {
+	thumbnail := &Thumbnail{width, height, bitspercomponent, bitsperpixel, bytesperrow, bitmapdata_location, bitmapdata_length, nil}
+	thumbnail.fetchData(f)
+
+	return thumbnail
+}
+
+func (thumb *Thumbnail) fetchData(f *os.File) {
 	buf := make([]byte, thumb.bitmapdata_length)
 	_, err := f.ReadAt(buf, thumb.bitmapdata_location)
 	if err != nil {

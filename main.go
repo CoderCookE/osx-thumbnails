@@ -64,22 +64,30 @@ func main() {
 			log.Fatal(err)
 		}
 
-		thumbnail := &Thumbnail{width, height, bitspercomponent, bitsperpixel, bytesperrow, bitmapdata_location, bitmapdata_length, nil}
-		thumbnail.FetchData(f)
+		thumbnail := NewThumbnail(
+			width,
+			height,
+			bitspercomponent,
+			bitsperpixel,
+			bytesperrow,
+			bitmapdata_location,
+			bitmapdata_length,
+			f,
+		)
+
 		thumbnails = append(thumbnails, thumbnail)
 	}
 
 	total := len(thumbnails)
 	var successCount int
 	for i, thumb := range thumbnails {
-
 		if thumb.data != nil {
 			filename := fmt.Sprintf("./output/out-%d.png", i)
 			thumb.CreateImage(filename)
 			successCount += 1
 			log.Printf("Successfully created %d of %d thumbnails", successCount, total)
 		} else {
-			log.Print("Image creation failed, miss data")
+			log.Print("Image creation failed, missing data")
 		}
 	}
 }

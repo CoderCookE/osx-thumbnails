@@ -1,42 +1,16 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
-	_ "github.com/mattn/go-sqlite3"
-	"io/ioutil"
 	"log"
-	"os"
 )
-
-const TMPLOCATION = "./tmp/dat1"
 
 func main() {
 	println("starting")
-	input := fmt.Sprintf("%s../C/com.apple.QuickLook.thumbnailcache", os.Getenv("TMPDIR"))
-	dbLocation := fmt.Sprintf("%s/index.sqlite", input)
+	dal := NewDAL()
+	defer dal.Shutdown()
 
-	data, err := ioutil.ReadFile(dbLocation)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = ioutil.WriteFile(TMPLOCATION, data, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	db, err := sql.Open("sqlite3", TMPLOCATION)
-	defer db.Close()
-
-	db.SetMaxOpenConns(1)
-	db.SetMaxIdleConns(1)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	rows, err := db.Query("SELECT width, height, bitspercomponent, bitsperpixel, bytesperrow, bitmapdata_location, bitmapdata_length FROM thumbnails")
+	rows, err := dal.Db.Query("SELECT width, height, bitspercomponent, bitsperpixel, bytesperrow, bitmapdata_location, bitmapdata_length FROM thumbnails")
 	defer rows.Close()
 	if err != nil {
 		log.Fatal(err)
@@ -49,13 +23,6 @@ func main() {
 	var bytesperrow int
 	var bitmapdata_location int64
 	var bitmapdata_length int64
-
-	dataFile := fmt.Sprintf("%s/thumbnails.data", input)
-	f, err := os.Open(dataFile)
-	defer f.Close()
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	thumbnails := make([]*Thumbnail, 0)
 	for rows.Next() {
@@ -72,7 +39,7 @@ func main() {
 			bytesperrow,
 			bitmapdata_location,
 			bitmapdata_length,
-			f,
+			dal.DataFile,
 		)
 
 		thumbnails = append(thumbnails, thumbnail)

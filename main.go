@@ -50,13 +50,12 @@ func main() {
 	var successCount int
 
 	for i, thumb := range thumbnails {
-		if thumb.data != nil {
-			filename := fmt.Sprintf("%s/out-%d.png", getOutputDir(), i)
-			thumb.CreateImage(filename)
+		filename := fmt.Sprintf("%s/out-%d.png", getOutputDir(), i)
+		if err := thumb.CreateImage(filename); err != nil {
+			log.Printf("Image creation failed: %s", err.Error())
+		} else {
 			successCount += 1
 			log.Printf("Successfully created %d of %d thumbnails", successCount, total)
-		} else {
-			log.Print("Image creation failed, missing data")
 		}
 	}
 }

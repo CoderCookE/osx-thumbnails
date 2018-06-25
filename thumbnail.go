@@ -36,11 +36,15 @@ func (thumb *Thumbnail) fetchData(f *os.File) {
 	thumb.data = buf
 }
 
-func (thumb *Thumbnail) CreateImage(output string) {
+func (thumb *Thumbnail) CreateImage(output string) (err error) {
 	img := &image.RGBA{Pix: thumb.data, Stride: thumb.bytesperrow, Rect: image.Rect(0, 0, thumb.width, thumb.height)}
 
-	out, _ := os.OpenFile(output, os.O_WRONLY|os.O_CREATE, 0600)
+	out, err := os.OpenFile(output, os.O_WRONLY|os.O_CREATE, 0600)
 	defer out.Close()
+	if err != nil {
+		return
+	}
 
 	png.Encode(out, img)
+	return
 }

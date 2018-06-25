@@ -6,9 +6,13 @@
 
 `./bin/osx-thumbnails`
 
+will output to directory in your $PWD
+
+`./osx-thumbnails-output`
 
 ## Building
 
+`make deps`
 `make`
 
 

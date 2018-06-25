@@ -3,12 +3,15 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 )
 
 func main() {
 	println("starting")
 	dal := NewDAL()
 	defer dal.Shutdown()
+
+	makeOutputDirectory()
 
 	rows := dal.FindThumnails()
 	defer rows.Close()
@@ -45,9 +48,10 @@ func main() {
 
 	total := len(thumbnails)
 	var successCount int
+
 	for i, thumb := range thumbnails {
 		if thumb.data != nil {
-			filename := fmt.Sprintf("./output/out-%d.png", i)
+			filename := fmt.Sprintf("%s/out-%d.png", getOutputDir(), i)
 			thumb.CreateImage(filename)
 			successCount += 1
 			log.Printf("Successfully created %d of %d thumbnails", successCount, total)
@@ -55,4 +59,21 @@ func main() {
 			log.Print("Image creation failed, missing data")
 		}
 	}
+}
+
+func makeOutputDirectory() {
+	log.Printf("Outputting to %s", getOutputDir())
+
+	if err := os.Mkdir(getOutputDir(), os.ModeDir|os.ModePerm); err != nil {
+		log.Fatal(err.Error())
+	}
+}
+
+func getOutputDir() string {
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	return fmt.Sprintf("%s/osx-thumbnails-output", cwd)
 }

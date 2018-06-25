@@ -36,9 +36,21 @@ func NewDAL() *DAL {
 	}
 }
 
+func (d *DAL) FindThumnails() *sql.Rows {
+	rows, err := d.Db.Query("SELECT width, height, bitspercomponent, bitsperpixel, bytesperrow, bitmapdata_location, bitmapdata_length FROM thumbnails")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return rows
+}
+
 func (d *DAL) Shutdown() {
 	d.Db.Close()
 	d.DataFile.Close()
+	os.Remove(tmpDBFile())
+	log.Print("Shutdown Complete")
 }
 
 func createTmpFile() (err error) {
@@ -56,16 +68,16 @@ func createTmpFile() (err error) {
 	return
 }
 
-func tmpDBFile() string {
-	return fmt.Sprintf("%s/tmposxthumbnails.sqlite", getTmpDir())
-}
-
 func getTmpDir() (tmpDir string) {
 	tmpDir = os.TempDir()
 	if len(tmpDir) == 0 {
 		tmpDir = os.Getenv("TMPDIR")
 	}
 	return
+}
+
+func tmpDBFile() string {
+	return fmt.Sprintf("%s/tmposxthumbnails.sqlite", getTmpDir())
 }
 
 func getInputDir() string {

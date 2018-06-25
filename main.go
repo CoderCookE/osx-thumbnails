@@ -10,11 +10,8 @@ func main() {
 	dal := NewDAL()
 	defer dal.Shutdown()
 
-	rows, err := dal.Db.Query("SELECT width, height, bitspercomponent, bitsperpixel, bytesperrow, bitmapdata_location, bitmapdata_length FROM thumbnails")
+	rows := dal.FindThumnails()
 	defer rows.Close()
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	var width int
 	var height int
@@ -26,7 +23,8 @@ func main() {
 
 	thumbnails := make([]*Thumbnail, 0)
 	for rows.Next() {
-		err = rows.Scan(&width, &height, &bitspercomponent, &bitsperpixel, &bytesperrow, &bitmapdata_location, &bitmapdata_length)
+		err := rows.Scan(&width, &height, &bitspercomponent, &bitsperpixel, &bytesperrow, &bitmapdata_location, &bitmapdata_length)
+
 		if err != nil {
 			log.Fatal(err)
 		}
